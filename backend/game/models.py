@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-from django.db.models import Sum, Window, F, Value
+from django.db.models import Sum, Window, F, Value, IntegerField
 from django.db.models.functions import Coalesce, RowNumber, Greatest
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -11,7 +11,10 @@ from moderation.models import ModerationMixin
 from user.models import User
 
 
-class Question(models.Model, ModerationMixin):
+class Question(
+    ModerationMixin,
+    models.Model
+):
     text = models.CharField(max_length=200, unique=True)
     is_active = models.BooleanField(default=True)
 
@@ -25,20 +28,24 @@ class Question(models.Model, ModerationMixin):
                 order_by=[F('answer_quantity').desc(), F('id').asc()]
             )
         ).annotate(
-            score=Greatest(
+            answer_score=Greatest(
                 Value(0),
                 Value(settings.MAX_SCORE_PER_ANSWER) - (
-                            (F('position') - 1) * (settings.MAX_SCORE_PER_ANSWER / settings.TOP_ANSWERS_LIMIT))
+                            (F('position') - 1) * (settings.MAX_SCORE_PER_ANSWER / settings.TOP_ANSWERS_LIMIT)),
+                output_field=IntegerField()
             )
         )
         obj = get_object_or_404(qs, pk=answer_id)
-        return obj.score
+        return obj.answer_score
 
     def __str__(self):
         return self.text[:50]
 
 
-class Answer(models.Model, ModerationMixin):
+class Answer(
+    ModerationMixin,
+    models.Model
+):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answers')
     text = models.CharField(max_length=200, unique=True)
     is_active = models.BooleanField(default=True)
@@ -51,14 +58,6 @@ class Answer(models.Model, ModerationMixin):
     @property
     def score(self) -> int:
         return self.question.get_answer_score(self.id)
-
-    def save(self, *args, **kwargs):
-        _created = self.id is None
-
-        if _created and not self.objects.filter(text=self.text).exists():
-            super().save(*args, **kwargs)
-
-        self.answer_quantity += 1
 
     def __str__(self):
         return f"{self.question_id}: {self.text[:50]}"

@@ -13,9 +13,14 @@ class UserViewSet(GenericViewSet):
     serializer_class = UserSerializer
 
     def create(self, request, *args, **kwargs):
+        """
+        Register a new user.
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+
+        User.objects.create_user(**serializer.validated_data)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @permission_classes([IsAuthenticated])

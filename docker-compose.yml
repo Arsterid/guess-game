@@ -18,7 +18,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    entrypoint: [ "sh", "-c", "python manage.py migrate && uvicorn support_bot.asgi:application --host 0.0.0.0 --port 8000" ]
+    entrypoint: [ "sh", "-c", "python manage.py migrate && uvicorn guess_game.asgi:application --host 0.0.0.0 --port 8000" ]
     depends_on:
       - postgres_db
     environment:

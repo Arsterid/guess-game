@@ -10,11 +10,24 @@ class AnswerSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "text",
-            "question"
+            "question",
+            "answer_quantity",
         )
         read_only_fields = (
             "id",
+            "answer_quantity",
         )
+        extra_kwargs = {
+            'text': {'validators': []},
+        }
+
+    def create(self, validated_data):
+        if obj := Answer.objects.filter(text=validated_data["text"]).first():
+            obj.answer_quantity += 1
+            obj.save()
+            return obj
+
+        return super().create(validated_data)
 
 
 class QuestionSerializer(serializers.ModelSerializer):

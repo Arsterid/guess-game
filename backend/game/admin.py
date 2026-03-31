@@ -26,8 +26,8 @@ class SessionAdmin(admin.ModelAdmin):
 @admin.register(SessionAnswer)
 class SessionAnswerAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'question', 'answer', 'score', 'created_at',)
-    list_filter = ('user', 'question', 'answer')
+    list_filter = ('question', 'answer')
 
     @admin.display(description='User')
     def user(self, obj):
-        return obj.user
+        return obj.session.user

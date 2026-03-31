@@ -46,7 +46,7 @@ class QuestionViewSet(mixins.CreateModelMixin,
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(methods=['GET'], detail=True)
-    def get_most_frequent_questions(self, request, pk: int):
+    def get_most_frequent_answers(self, request, pk: int):
         obj = get_object_or_404(Question, pk=pk)
         qs = obj.get_most_frequent_answers(settings.TOP_ANSWERS_LIMIT)
 
@@ -74,19 +74,26 @@ class QuestionViewSet(mixins.CreateModelMixin,
 
         if answer is None:
             SessionAnswer.objects.create(
-                user=request.user,
                 session=session,
+                question=obj,
             )
-            return Response("There is no such answer!", status=status.HTTP_204_NO_CONTENT)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        score = int(answer.score)
 
         SessionAnswer.objects.create(
-            user=request.user,
             session=session,
+            question=obj,
             answer=answer,
-            score=answer.score
+            score=score
         )
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "score": score,
+            },
+            status=status.HTTP_200_OK
+        )
 
 
 class SessionViewSet(GenericViewSet):

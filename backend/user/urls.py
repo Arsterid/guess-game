@@ -7,8 +7,8 @@ from user.views import *
 router = DefaultRouter()
 
 router.register('user', UserViewSet, basename='user')
-router.register('user/auth', obtain_auth_token, basename='user/auth')
 
 urlpatterns = [
     path('', include(router.urls), name='user'),
+    path('user/auth/', obtain_auth_token, name='user-auth'),
 ]
